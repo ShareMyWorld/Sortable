@@ -195,6 +195,7 @@
 			scrollSensitivity: 30,
 			scrollSpeed: 10,
 			draggable: /[uo]l/i.test(el.nodeName) ? 'li' : '>*',
+                        altContainerCheck: false,
 			ghostClass: 'sortable-ghost',
 			chosenClass: 'sortable-chosen',
 			ignore: 'a, img',
@@ -610,7 +611,7 @@
 
 
 				if ((el.children.length === 0) || (el.children[0] === ghostEl) ||
-					(el === evt.target) && (target = _ghostIsLast(el, evt))
+					(el === evt.target) && (target = _ghostIsLast(el, evt, this.options.altContainerCheck))
 				) {
 
 					if (target) {
@@ -1135,11 +1136,21 @@
 
 
 	/** @returns {HTMLElement|false} */
-	function _ghostIsLast(el, evt) {
-		var lastEl = el.lastElementChild,
-				rect = lastEl.getBoundingClientRect();
+	function _ghostIsLast(el, evt, altContainerCheck) {
+        if (altContainerCheck) {
+            var parentMargin = 16, rect = el.getBoundingClientRect();
 
-		return ((evt.clientY - (rect.top + rect.height) > 5) || (evt.clientX - (rect.right + rect.width) > 5)) && lastEl; // min delta
+            return evt.clientY > rect.top + parentMargin &&
+                    evt.clientX > rect.left + parentMargin &&
+                    evt.clientY < rect.bottom - parentMargin &&
+                    evt.clientX < rect.right - parentMargin &&
+                    el.lastElementChild;
+        } else {
+            var lastEl = el.lastElementChild,
+                rect = lastEl.getBoundingClientRect();
+
+            return ((evt.clientY - (rect.top + rect.height) > 5) || (evt.clientX - (rect.right + rect.width) > 5)) && lastEl; // min delta
+        }
 	}
 
 
