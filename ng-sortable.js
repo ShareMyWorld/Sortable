@@ -36,29 +36,33 @@
 		.directive('ngSortable', ['$parse', 'ngSortableConfig', function ($parse, ngSortableConfig) {
 			var removed,
 				nextSibling,
-				getSourceFactory = function getSourceFactory(el, scope) {
-					var ngRepeat = [].filter.call(el.childNodes, function (node) {
-						return (
-								(node.nodeType === 8) &&
-								(node.nodeValue.indexOf('ngRepeat:') !== -1)
-							);
-					})[0];
+				getSourceFactory = function getSourceFactory(el, scope, options) {
+                    var itemsExpr;
+                    if (options.items) {
+                        itemsExpr = $parse(options.items);
+                    } else {
+                        var ngRepeat = [].filter.call(el.childNodes, function (node) {
+                            return (
+                                    (node.nodeType === 8) &&
+                                    (node.nodeValue.indexOf('ngRepeat:') !== -1)
+                                );
+                        })[0];
 
-					if (!ngRepeat) {
-						// Without ng-repeat
-						return function () {
-							return null;
-						};
-					}
+                        if (!ngRepeat) {
+                            // Without ng-repeat
+                            return function () {
+                                return null;
+                            };
+                        }
 
-					// tests: http://jsbin.com/kosubutilo/1/edit?js,output
-					ngRepeat = ngRepeat.nodeValue.match(/ngRepeat:\s*(?:\(.*?,\s*)?([^\s)]+)[\s)]+in\s+([^\s|]+)/);
+                        // tests: http://jsbin.com/kosubutilo/1/edit?js,output
+                        ngRepeat = ngRepeat.nodeValue.match(/ngRepeat:\s*(?:\(.*?,\s*)?([^\s)]+)[\s)]+in\s+([^\s|]+)/);
+                        itemsExpr = $parse(ngRepeat[2]);
+                    }
 
-					var itemsExpr = $parse(ngRepeat[2]);
-
-					return function () {
-						return itemsExpr(scope.$parent) || [];
-					};
+                    return function () {
+                        return itemsExpr(scope.$parent) || [];
+                    };
 				};
 
 
@@ -70,7 +74,7 @@
 					var el = $el[0],
 						options = angular.extend(scope.ngSortable || {}, ngSortableConfig),
 						watchers = [],
-						getSource = getSourceFactory(el, scope),
+						getSource = getSourceFactory(el, scope, options),
 						sortable
 					;
 
